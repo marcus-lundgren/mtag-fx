@@ -1,8 +1,6 @@
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -12,14 +10,25 @@ import model.LoggedEntry;
 import widget.OverlayCanvas;
 import widget.TimelineCanvas;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 public class HelloFX extends Application {
 
     @Override
     public void start(Stage stage) {
-        String javaVersion = System.getProperty("java.version");
-        String javafxVersion = System.getProperty("javafx.version");
-        Label l = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
-        l.setPrefHeight(50);
+        LocalDate date = LocalDate.now();
+        DateTimeFormatter weekDayFormatter = DateTimeFormatter.ofPattern("w", Locale.of("sv", "SE"));
+        DateTimeFormatter isoDate = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.of("sv", "SE"));
+        var dateString = String.format("[W %s] %s", date.format(weekDayFormatter), date.format(isoDate));
+        ToolBar toolbar = new ToolBar(
+                new Button("<< -1 week"),
+                new Button("< -1 day"),
+                new Button(dateString),
+                new Button("+1 day >"),
+                new Button("+1 week >>")
+        );
 
         var pane = new Pane();
         pane.setPrefHeight(1000);
@@ -39,8 +48,8 @@ public class HelloFX extends Application {
         pane.getChildren().addAll(timeline_canvas, overlay_canvas);
 
         var vBox = new VBox();
+        vBox.getChildren().add(toolbar);
         vBox.getChildren().add(pane);
-        vBox.getChildren().add(l);
         vBox.widthProperty().addListener((observable -> {
             timeline_canvas.repaint();
             overlay_canvas.repaint();
