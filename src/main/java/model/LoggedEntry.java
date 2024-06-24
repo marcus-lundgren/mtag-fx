@@ -21,4 +21,20 @@ public class LoggedEntry {
         this(start, stop, applicationWindow);
         this.databaseId = databaseId;
     }
+
+    public LocalDateTime getStart() {
+        return start;
+    }
+
+    public void setStart(LocalDateTime newStart) {
+        start = newStart;
+    }
+
+    public long getDatabaseId() {
+        return databaseId;
+    }
+
+    public void setDatabaseId(long newDatabaseId) {
+        databaseId = newDatabaseId;
+    }
 }
