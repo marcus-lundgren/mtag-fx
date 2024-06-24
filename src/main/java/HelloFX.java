@@ -50,10 +50,6 @@ public class HelloFX extends Application {
         var vBox = new VBox();
         vBox.getChildren().add(toolbar);
         vBox.getChildren().add(pane);
-        vBox.widthProperty().addListener((observable -> {
-            timeline_canvas.repaint();
-            overlay_canvas.repaint();
-        }));
 
         Scene scene = new Scene(vBox);
         stage.setScene(scene);
