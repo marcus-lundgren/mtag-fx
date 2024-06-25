@@ -2,6 +2,7 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
@@ -10,9 +11,12 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import model.LoggedEntry;
+import repository.LoggedEntryRepository;
 import widget.OverlayCanvas;
 import widget.TimelineCanvas;
 
+import java.awt.*;
+import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -59,10 +63,20 @@ public class HelloFX extends Application {
 
         // List view of logged entries
         final var tableView = new TableView<LoggedEntry>();
+
         final var loggedEntries = FXCollections.observableArrayList(
                 new LoggedEntry(LocalDateTime.now(), LocalDateTime.now(), null, 1L),
                 new LoggedEntry(LocalDateTime.now(), LocalDateTime.now(), null, 2L)
         );
+
+        try {
+            var loggedEntryRepository = new LoggedEntryRepository();
+            var connection = DriverManager.getConnection("jdbc:sqlite:/home/fuujin/.local/share/mtag/mtag.db");
+            var loggedEntry = loggedEntryRepository.getLatestEntry(connection);
+            loggedEntries.add(loggedEntry);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         tableView.setItems(loggedEntries);
 
@@ -76,7 +90,10 @@ public class HelloFX extends Application {
                     var clickedEntry = (LoggedEntry) row.getItem();
 
                     // TODO: Should launch browser on category URL
-                    System.out.println(String.format("Entry with id = %s clicked", clickedEntry.getDatabaseId()));
+                    System.out.printf("Entry with id = %s clicked%n", clickedEntry.getDatabaseId());
+                    var url = String.format("https://google.com/?dbid=%s", clickedEntry.getDatabaseId());
+                    System.out.println("Trying to open URL [" + url + "] when desktop supported == " + Desktop.isDesktopSupported());
+                    getHostServices().showDocument(url);
                 }
             });
 
