@@ -9,7 +9,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import model.LoggedEntry;
 import repository.LoggedEntryRepository;
@@ -124,50 +123,5 @@ public class HelloFX extends Application {
         var column = new TableColumn<LoggedEntry, String>(title);
         column.setCellValueFactory(new PropertyValueFactory<>(field));
         return column;
-    }
-
-    private class ClippingRectangle {
-        // The previous values
-        private double oldXStart = 0f;
-        private double oldXEnd = 0f;
-        private double oldYStart = 0f;
-        private double oldYEnd = 0f;
-
-        // The current values
-        private double currentXStart = 0f;
-        private double currentXEnd;
-        private double currentYStart = 0f;
-        private double currentYEnd;
-
-        public ClippingRectangle(double width, double height) {
-            currentXEnd = currentXStart + width;
-            currentYEnd = currentYStart + height;
-        }
-
-        public void setCurrentValues(double x, double y, double width, double height) {
-            setOldValues();
-            currentXStart = x;
-            currentXEnd = x + width;
-            currentYStart = y;
-            currentYEnd = y + height;
-        }
-
-        public Rectangle getClippingRectangle() {
-            var x = Math.min(oldXStart, currentXStart);
-            var y = Math.min(oldYStart, currentYStart);
-            var xEnd = Math.max(oldXEnd, currentXEnd);
-            var yEnd = Math.max(oldYEnd, currentYEnd);
-            var width = xEnd - x;
-            var height = yEnd - y;
-            System.out.printf("(%s, %s) -> %s, %s%n", x, y, width, height);
-            return new Rectangle(x, y, width, height);
-        }
-
-        private void setOldValues() {
-            oldXStart = currentXStart;
-            oldXEnd = currentXEnd;
-            oldYStart = currentYStart;
-            oldYEnd = currentYEnd;
-        }
     }
 }
