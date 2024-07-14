@@ -1,3 +1,4 @@
+import helper.DatabaseHelper;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
@@ -16,7 +17,6 @@ import widget.OverlayCanvas;
 import widget.TimelineCanvas;
 
 import java.awt.*;
-import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -71,8 +71,8 @@ public class HelloFX extends Application {
 
         try {
             var loggedEntryRepository = new LoggedEntryRepository();
-            var connection = DriverManager.getConnection("jdbc:sqlite:/home/fuujin/.local/share/mtag/mtag.db");
-            var loggedEntry = loggedEntryRepository.getLatestEntry(connection);
+            final var databaseHelper = new DatabaseHelper();
+            var loggedEntry = loggedEntryRepository.getLatestEntry(databaseHelper.connect());
             loggedEntries.add(loggedEntry);
         } catch (Exception ex) {
             ex.printStackTrace();
