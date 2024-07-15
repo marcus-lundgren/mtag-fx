@@ -1,12 +1,16 @@
 package helper;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 
 public class DateTimeHelper {
+    private static final LocalTime ZERO_TIME = LocalTime.of(0,0,0);
+
     public static LocalDateTime timestampToLocalDateTime(long timestamp) {
         var instant = Instant.ofEpochSecond(timestamp);
         return LocalDateTime.ofInstant(instant, ZoneOffset.systemDefault());
+    }
+
+    public static long LocalDateToTimestamp(LocalDate date) {
+        return date.toEpochSecond(ZERO_TIME, ZoneId.systemDefault().getRules().getOffset(date.atStartOfDay()));
     }
 }

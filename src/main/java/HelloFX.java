@@ -1,6 +1,7 @@
 import helper.DatabaseHelper;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -12,29 +13,32 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.LoggedEntry;
 import repository.LoggedEntryRepository;
+import widget.CalendarButton;
 import widget.OverlayCanvas;
 import widget.TimelineCanvas;
 
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 public class HelloFX extends Application {
+
+    private ObservableList<LoggedEntry> loggedEntries;
 
     @Override
     public void start(Stage stage) {
         // Toolbar
-        LocalDate date = LocalDate.now();
-        DateTimeFormatter weekDayFormatter = DateTimeFormatter.ofPattern("w", Locale.of("sv", "SE"));
-        DateTimeFormatter isoDate = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.of("sv", "SE"));
-        var dateString = String.format("[W %s] %s", date.format(weekDayFormatter), date.format(isoDate));
+        final var calendarButton = new CalendarButton();
+        calendarButton.setOnDateChange(e -> changeDate(calendarButton.getSelectedDate()));
+        final var minusOneDayButton = new Button("< -1 day");
+        minusOneDayButton.setOnAction(e -> calendarButton.AddDays(-1));
+        final var plusOneDayButton = new Button("+1 day >");
+        plusOneDayButton.setOnAction(e -> calendarButton.AddDays(1));
         ToolBar toolbar = new ToolBar(
                 new Button("<< -1 week"),
-                new Button("< -1 day"),
-                new Button(dateString),
-                new Button("+1 day >"),
+                minusOneDayButton,
+                calendarButton,
+                plusOneDayButton,
                 new Button("+1 week >>")
         );
 
@@ -63,19 +67,10 @@ public class HelloFX extends Application {
         // List view of logged entries
         final var tableView = new TableView<LoggedEntry>();
 
-        final var loggedEntries = FXCollections.observableArrayList(
+        loggedEntries = FXCollections.observableArrayList(
                 new LoggedEntry(LocalDateTime.now(), LocalDateTime.now(), null, 1L),
                 new LoggedEntry(LocalDateTime.now(), LocalDateTime.now(), null, 2L)
         );
-
-        try {
-            var loggedEntryRepository = new LoggedEntryRepository();
-            final var databaseHelper = new DatabaseHelper();
-            var loggedEntry = loggedEntryRepository.getLatestEntry(databaseHelper.connect());
-            loggedEntries.add(loggedEntry);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
 
         tableView.setItems(loggedEntries);
 
@@ -117,6 +112,19 @@ public class HelloFX extends Application {
 
     public static void main(String[] args) {
         launch();
+    }
+
+    private void changeDate(LocalDate date) {
+        loggedEntries.clear();
+        var loggedEntryRepository = new LoggedEntryRepository();
+        final var databaseHelper = new DatabaseHelper();
+
+        try {
+            var entries = loggedEntryRepository.getAllByDate(databaseHelper.connect(), date);
+            loggedEntries.addAll(entries);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private TableColumn<LoggedEntry, String> createColumn(String title, String field) {
