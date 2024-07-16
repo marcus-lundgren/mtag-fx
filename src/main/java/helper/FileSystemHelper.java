@@ -8,7 +8,7 @@ public class FileSystemHelper {
     private final static OS os = getOs();
     private static Path userDataPath = null;
 
-    public Path GetUserDataPath() throws Exception {
+    public Path getUserDataPath() throws Exception {
         if (userDataPath != null) {
             return userDataPath;
         }

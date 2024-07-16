@@ -9,7 +9,7 @@ public class DatabaseHelper {
     public Connection connect() throws Exception {
         if (databaseConnectionString == null) {
             var filesystemHelper = new FileSystemHelper();
-            final var userDataPath = filesystemHelper.GetUserDataPath();
+            final var userDataPath = filesystemHelper.getUserDataPath();
             final var databasePath = userDataPath.resolve("mtag.db");
             databaseConnectionString = "jdbc:sqlite:" + databasePath.toAbsolutePath();
         }

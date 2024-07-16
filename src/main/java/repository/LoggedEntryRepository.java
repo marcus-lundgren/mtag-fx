@@ -33,8 +33,8 @@ public class LoggedEntryRepository {
                 + " ORDER BY le_start ASC");
 
         var toDate = date.plusDays(1);
-        var dateTimestamp = DateTimeHelper.LocalDateToTimestamp(date);
-        var toDateTimestamp = DateTimeHelper.LocalDateToTimestamp(toDate);
+        var dateTimestamp = DateTimeHelper.localDateToTimestamp(date);
+        var toDateTimestamp = DateTimeHelper.localDateToTimestamp(toDate);
         preparedStatement.setLong(1, dateTimestamp);
         preparedStatement.setLong(3, dateTimestamp);
         preparedStatement.setLong(2, toDateTimestamp);

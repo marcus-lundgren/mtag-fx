@@ -10,7 +10,7 @@ public class DateTimeHelper {
         return LocalDateTime.ofInstant(instant, ZoneOffset.systemDefault());
     }
 
-    public static long LocalDateToTimestamp(LocalDate date) {
+    public static long localDateToTimestamp(LocalDate date) {
         return date.toEpochSecond(ZERO_TIME, ZoneId.systemDefault().getRules().getOffset(date.atStartOfDay()));
     }
 }
