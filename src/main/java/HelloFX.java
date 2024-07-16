@@ -4,7 +4,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
@@ -13,7 +12,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.LoggedEntry;
 import repository.LoggedEntryRepository;
-import widget.CalendarButton;
+import widget.CalendarPanel;
 import widget.OverlayCanvas;
 import widget.TimelineCanvas;
 
@@ -28,19 +27,9 @@ public class HelloFX extends Application {
     @Override
     public void start(Stage stage) {
         // Toolbar
-        final var calendarButton = new CalendarButton();
-        calendarButton.setOnDateChange(e -> changeDate(calendarButton.getSelectedDate()));
-        final var minusOneDayButton = new Button("< -1 day");
-        minusOneDayButton.setOnAction(e -> calendarButton.AddDays(-1));
-        final var plusOneDayButton = new Button("+1 day >");
-        plusOneDayButton.setOnAction(e -> calendarButton.AddDays(1));
-        ToolBar toolbar = new ToolBar(
-                new Button("<< -1 week"),
-                minusOneDayButton,
-                calendarButton,
-                plusOneDayButton,
-                new Button("+1 week >>")
-        );
+        final var calendarPane = new CalendarPanel();
+        calendarPane.setOnDateChange(e -> changeDate(calendarPane.getSelectedLocalDate()));
+        ToolBar toolbar = new ToolBar(calendarPane);
 
         // Canvas
         var pane = new Pane();
