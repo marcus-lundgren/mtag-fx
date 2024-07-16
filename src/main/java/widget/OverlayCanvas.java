@@ -10,9 +10,13 @@ public class OverlayCanvas extends MyCanvas {
 
     public OverlayCanvas(double width, double height, Pane parent) {
         super(width, height, parent);
+        setOnMouseMoved(e -> {
+            setCurrentPosition(e.getX(), e.getY());
+            repaint();
+        });
     }
 
-    public void setCurrentPosition(double x, double y) {
+    private void setCurrentPosition(double x, double y) {
         currentX = x;
         currentY = y;
     }

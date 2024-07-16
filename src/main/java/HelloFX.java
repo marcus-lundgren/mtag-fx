@@ -42,10 +42,6 @@ public class HelloFX extends Application {
         var timeline_canvas = new TimelineCanvas(500, 500, pane);
         var overlay_canvas = new OverlayCanvas(500, 500, pane);
         overlay_canvas.toFront();
-        overlay_canvas.setOnMouseMoved(event -> {
-            overlay_canvas.setCurrentPosition(event.getX(), event.getY());
-            overlay_canvas.repaint();
-        });
 
         pane.widthProperty().addListener((observable -> {
             timeline_canvas.repaint();
