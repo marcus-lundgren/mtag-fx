@@ -21,6 +21,7 @@ import widget.TimelineCanvas;
 
 import java.awt.*;
 import java.time.LocalDate;
+import java.util.Locale;
 
 public class HelloFX extends Application {
 
@@ -28,6 +29,9 @@ public class HelloFX extends Application {
 
     @Override
     public void start(Stage stage) {
+        // Used to make the DatePicker show Monday as first day of week and the days as English.
+        Locale.setDefault(Locale.Category.FORMAT, Locale.UK);
+
         // Toolbar
         final var calendarPane = new CalendarPanel();
         calendarPane.setOnDateChange(e -> changeDate(calendarPane.getSelectedLocalDate()));
@@ -102,6 +106,7 @@ public class HelloFX extends Application {
 
         // TODO: Make an informed decision here
         stage.setMinHeight(500);
+        stage.setMinWidth(650);
         timeline_canvas.repaint();
         overlay_canvas.repaint();
     }

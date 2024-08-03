@@ -2,8 +2,10 @@ package helper;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class DateTimeHelper {
+    public static final Locale DEFAULT_LOCALE = Locale.of("sv", "SE");
     private static final LocalTime ZERO_TIME = LocalTime.of(0,0,0);
 
     public static String toTimeString(LocalDateTime localDateTime) {
