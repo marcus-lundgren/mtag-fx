@@ -26,8 +26,12 @@ public class LoggedEntry {
         return start;
     }
 
-    public void setStart(LocalDateTime newStart) {
-        start = newStart;
+    public LocalDateTime getStop() {
+        return stop;
+    }
+
+    public Duration getDuration() {
+        return duration;
     }
 
     public long getDatabaseId() {

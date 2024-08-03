@@ -1,15 +1,18 @@
 import helper.DatabaseHelper;
+import helper.DateTimeHelper;
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import model.LoggedEntry;
 import repository.LoggedEntryRepository;
 import widget.CalendarPanel;
@@ -18,7 +21,6 @@ import widget.TimelineCanvas;
 
 import java.awt.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public class HelloFX extends Application {
 
@@ -52,16 +54,25 @@ public class HelloFX extends Application {
         // List view of logged entries
         final var tableView = new TableView<LoggedEntry>();
 
-        loggedEntries = FXCollections.observableArrayList(
-                new LoggedEntry(LocalDateTime.now(), LocalDateTime.now(), null, 1L),
-                new LoggedEntry(LocalDateTime.now(), LocalDateTime.now(), null, 2L)
-        );
-
+        loggedEntries = FXCollections.observableArrayList();
         tableView.setItems(loggedEntries);
+        changeDate(LocalDate.now());
 
         // TODO: Make an informed decision here
         tableView.setMinHeight(200);
-        tableView.getColumns().addAll(createColumn("Id", "databaseId"), createColumn("Start", "Start"));
+        tableView.getColumns().addAll(
+                createColumn("Start", col -> {
+                    final var loggedEntry = col.getValue();
+                    return new SimpleStringProperty(DateTimeHelper.toTimeString(loggedEntry.getStart()));
+                }),
+                createColumn("Stop", col -> {
+                    final var loggedEntry = col.getValue();
+                    return new SimpleStringProperty(DateTimeHelper.toTimeString(loggedEntry.getStop()));
+                }),
+                createColumn("Duration", col -> {
+                    final var loggedEntry = col.getValue();
+                    return new SimpleStringProperty(DateTimeHelper.toTimeString(loggedEntry.getDuration()));
+                }));
         tableView.setRowFactory(tv -> {
             var row = new TableRow<LoggedEntry>();
             row.setOnMouseClicked(event -> {
@@ -112,9 +123,9 @@ public class HelloFX extends Application {
         }
     }
 
-    private TableColumn<LoggedEntry, String> createColumn(String title, String field) {
+    private TableColumn<LoggedEntry, String> createColumn(String title, Callback<TableColumn.CellDataFeatures<LoggedEntry, String>, ObservableValue<String>> cellValueFactory) {
         var column = new TableColumn<LoggedEntry, String>(title);
-        column.setCellValueFactory(new PropertyValueFactory<>(field));
+        column.setCellValueFactory(cellValueFactory);
         return column;
     }
 }
