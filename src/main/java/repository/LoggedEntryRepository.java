@@ -14,8 +14,8 @@ public class LoggedEntryRepository {
     private final ApplicationWindowRepository applicationWindowRepository = new ApplicationWindowRepository();
 
     public LoggedEntry getLatestEntry(Connection connection) throws SQLException {
-        var statement = connection.createStatement();
-        var resultSet = statement.executeQuery("SELECT * FROM logged_entry ORDER BY le_last_update DESC");
+        final var statement = connection.createStatement();
+        final var resultSet = statement.executeQuery("SELECT * FROM logged_entry ORDER BY le_last_update DESC");
 
         if (!resultSet.next()) {
             return null;
@@ -25,14 +25,14 @@ public class LoggedEntryRepository {
     }
 
     public List<LoggedEntry> getAllByDate(Connection connection, LocalDate date) throws SQLException {
-        var preparedStatement = connection.prepareStatement(
+        final var preparedStatement = connection.prepareStatement(
                 "SELECT * FROM logged_entry WHERE"
                 + " (? <= le_last_update AND le_last_update < ?) OR (? <= le_start AND le_start < ?)"
                 + " ORDER BY le_start ASC");
 
-        var toDate = date.plusDays(1);
-        var dateTimestamp = DateTimeHelper.localDateToTimestamp(date);
-        var toDateTimestamp = DateTimeHelper.localDateToTimestamp(toDate);
+        final var toDate = date.plusDays(1);
+        final var dateTimestamp = DateTimeHelper.localDateToTimestamp(date);
+        final var toDateTimestamp = DateTimeHelper.localDateToTimestamp(toDate);
         preparedStatement.setLong(1, dateTimestamp);
         preparedStatement.setLong(3, dateTimestamp);
         preparedStatement.setLong(2, toDateTimestamp);
@@ -50,14 +50,14 @@ public class LoggedEntryRepository {
     }
 
     private LoggedEntry fromDbo(Connection connection, ResultSet resultSet) throws SQLException {
-        var startValue = resultSet.getLong("le_start");
-        var startDateTime = DateTimeHelper.timestampToLocalDateTime(startValue);
-        var stopValue = resultSet.getLong("le_last_update");
-        var stopDateTime = DateTimeHelper.timestampToLocalDateTime(stopValue);
-        var databaseIdValue = resultSet.getLong("le_id");
+        final var startValue = resultSet.getLong("le_start");
+        final var startDateTime = DateTimeHelper.timestampToLocalDateTime(startValue);
+        final var stopValue = resultSet.getLong("le_last_update");
+        final var stopDateTime = DateTimeHelper.timestampToLocalDateTime(stopValue);
+        final var databaseIdValue = resultSet.getLong("le_id");
 
-        var applicationWindowId = resultSet.getLong("le_application_window_id");
-        var applicationWindow = applicationWindowRepository.get(connection, applicationWindowId);
+        final var applicationWindowId = resultSet.getLong("le_application_window_id");
+        final var applicationWindow = applicationWindowRepository.get(connection, applicationWindowId);
 
         return new LoggedEntry(startDateTime, stopDateTime, applicationWindow, databaseIdValue);
     }

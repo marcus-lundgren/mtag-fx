@@ -22,7 +22,7 @@ public class DateTimeHelper {
     }
 
     public static LocalDateTime timestampToLocalDateTime(long timestamp) {
-        var instant = Instant.ofEpochSecond(timestamp);
+        final var instant = Instant.ofEpochSecond(timestamp);
         return LocalDateTime.ofInstant(instant, ZoneOffset.systemDefault());
     }
 
