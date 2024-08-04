@@ -41,4 +41,8 @@ public class LoggedEntry {
     public void setDatabaseId(long newDatabaseId) {
         databaseId = newDatabaseId;
     }
+
+    public ApplicationWindow getApplicationWindow() {
+        return applicationWindow;
+    }
 }

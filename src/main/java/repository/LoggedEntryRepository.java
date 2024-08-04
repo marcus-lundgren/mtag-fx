@@ -4,12 +4,15 @@ import helper.DateTimeHelper;
 import model.LoggedEntry;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LoggedEntryRepository {
+    private final ApplicationWindowRepository applicationWindowRepository = new ApplicationWindowRepository();
+
     public LoggedEntry getLatestEntry(Connection connection) throws SQLException {
         var statement = connection.createStatement();
         var resultSet = statement.executeQuery("SELECT * FROM logged_entry ORDER BY le_last_update DESC");
@@ -18,12 +21,7 @@ public class LoggedEntryRepository {
             return null;
         }
 
-        var startValue = resultSet.getLong("le_start");
-        var startDateTime = DateTimeHelper.timestampToLocalDateTime(startValue);
-        var stopValue = resultSet.getLong("le_last_update");
-        var stopDateTime = DateTimeHelper.timestampToLocalDateTime(stopValue);
-        var databaseIdValue = resultSet.getLong("le_id");
-        return new LoggedEntry(startDateTime, stopDateTime, null, databaseIdValue);
+        return fromDbo(connection, resultSet);
     }
 
     public List<LoggedEntry> getAllByDate(Connection connection, LocalDate date) throws SQLException {
@@ -44,15 +42,23 @@ public class LoggedEntryRepository {
 
         var entries = new ArrayList<LoggedEntry>();
         while (resultSet.next()) {
-            var startValue = resultSet.getLong("le_start");
-            var startDateTime = DateTimeHelper.timestampToLocalDateTime(startValue);
-            var stopValue = resultSet.getLong("le_last_update");
-            var stopDateTime = DateTimeHelper.timestampToLocalDateTime(stopValue);
-            var databaseIdValue = resultSet.getLong("le_id");
-            var entry = new LoggedEntry(startDateTime, stopDateTime, null, databaseIdValue);
+            var entry = fromDbo(connection, resultSet);
             entries.add(entry);
         }
 
         return entries;
+    }
+
+    private LoggedEntry fromDbo(Connection connection, ResultSet resultSet) throws SQLException {
+        var startValue = resultSet.getLong("le_start");
+        var startDateTime = DateTimeHelper.timestampToLocalDateTime(startValue);
+        var stopValue = resultSet.getLong("le_last_update");
+        var stopDateTime = DateTimeHelper.timestampToLocalDateTime(stopValue);
+        var databaseIdValue = resultSet.getLong("le_id");
+
+        var applicationWindowId = resultSet.getLong("le_application_window_id");
+        var applicationWindow = applicationWindowRepository.get(connection, applicationWindowId);
+
+        return new LoggedEntry(startDateTime, stopDateTime, applicationWindow, databaseIdValue);
     }
 }

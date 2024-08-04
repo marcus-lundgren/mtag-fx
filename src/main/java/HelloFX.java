@@ -76,6 +76,14 @@ public class HelloFX extends Application {
                 createColumn("Duration", col -> {
                     final var loggedEntry = col.getValue();
                     return new SimpleStringProperty(DateTimeHelper.toTimeString(loggedEntry.getDuration()));
+                }),
+                createColumn("Application", col -> {
+                    // TODO - Replace with the name of the application
+                    return new SimpleStringProperty("");
+                }),
+                createColumn("Title", col -> {
+                    final var loggedEntry = col.getValue();
+                    return new SimpleStringProperty(loggedEntry.getApplicationWindow().getTitle());
                 }));
         tableView.setRowFactory(tv -> {
             var row = new TableRow<LoggedEntry>();

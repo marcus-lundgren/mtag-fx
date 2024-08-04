@@ -14,4 +14,8 @@ public class ApplicationWindow {
         this(title, application);
         this.databaseId = databaseId;
     }
+
+    public String getTitle() {
+        return title;
+    }
 }
