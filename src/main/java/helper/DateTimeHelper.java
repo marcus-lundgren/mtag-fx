@@ -7,9 +7,10 @@ import java.util.Locale;
 public class DateTimeHelper {
     public static final Locale DEFAULT_LOCALE = Locale.of("sv", "SE");
     private static final LocalTime ZERO_TIME = LocalTime.of(0,0,0);
+    public static final DateTimeFormatter TIME_STRING_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public static String toTimeString(LocalDateTime localDateTime) {
-        return localDateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        return localDateTime.format(TIME_STRING_FORMATTER);
     }
 
     public static String toTimeString(Duration duration) {
