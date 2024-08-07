@@ -1,11 +1,34 @@
 package widget;
 
+import helper.TimelineHelper;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import model.LoggedEntry;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 public class TimelineCanvas extends MyCanvas {
+    private LocalDateTime startDateTime;
+    private Duration currentDelta;
+    private TimelineHelper timelineHelper;
+
     public TimelineCanvas(double width, double height, Pane parent) {
         super(width, height, parent);
+        startDateTime = LocalDate.now().atStartOfDay();
+        currentDelta = Duration.ofSeconds(23 * 3600 + 59 * 60 + 59);
+        timelineHelper = createTimelineHelper();
+    }
+
+    public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries) {
+        this.startDateTime = date.atStartOfDay();
+        timelineHelper = createTimelineHelper();
+    }
+
+    private TimelineHelper createTimelineHelper() {
+        return new TimelineHelper(canvas.getWidth(), canvasTimelinePadding, startDateTime, startDateTime.plus(currentDelta));
     }
 
     @Override
@@ -41,5 +64,13 @@ public class TimelineCanvas extends MyCanvas {
         g.setFill(new Color(0.5, 0.5, 0.5, 0.5));
         g.fillRect(0, 0, canvasTimelinePadding, canvas.getHeight());
         g.fillRect(canvas.getWidth() - canvasTimelinePadding, 0, canvasTimelinePadding, canvas.getHeight());
+    }
+
+    public void updateConstants() {
+        timelineHelper = createTimelineHelper();
+    }
+
+    public TimelineHelper getTimelineHelper() {
+        return timelineHelper;
     }
 }

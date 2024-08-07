@@ -8,7 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.List;
 
 public class LoggedEntryRepository {
     private final ApplicationWindowRepository applicationWindowRepository = new ApplicationWindowRepository();
@@ -24,7 +23,7 @@ public class LoggedEntryRepository {
         return fromDbo(connection, resultSet);
     }
 
-    public List<LoggedEntry> getAllByDate(Connection connection, LocalDate date) throws SQLException {
+    public ArrayList<LoggedEntry> getAllByDate(Connection connection, LocalDate date) throws SQLException {
         final var preparedStatement = connection.prepareStatement(
                 "SELECT * FROM logged_entry WHERE"
                 + " (? <= le_last_update AND le_last_update < ?) OR (? <= le_start AND le_start < ?)"

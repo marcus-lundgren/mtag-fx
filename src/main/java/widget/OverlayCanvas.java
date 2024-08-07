@@ -1,15 +1,21 @@
 package widget;
 
+import helper.DateTimeHelper;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
+import java.time.LocalDateTime;
+
 public class OverlayCanvas extends MyCanvas {
+    private final TimelineCanvas timelineCanvas;
     private double currentX = 0f;
     private double currentY = 0f;
 
-    public OverlayCanvas(double width, double height, Pane parent) {
+    public OverlayCanvas(double width, double height, Pane parent, TimelineCanvas timelineCanvas) {
         super(width, height, parent);
+        this.timelineCanvas = timelineCanvas;
+
         setOnMouseMoved(e -> {
             setCurrentPosition(e.getX(), e.getY());
             repaint();
@@ -24,7 +30,10 @@ public class OverlayCanvas extends MyCanvas {
     @Override
     public void repaint() {
         // Tooltip data
-        String info = String.format("%s, %s", Math.floor(currentX), Math.floor(currentY));
+        final var timelineHelper = timelineCanvas.getTimelineHelper();
+        final var hoveredTime = timelineHelper.pixelToDatetime(currentX);
+
+        String info = DateTimeHelper.toTimeString(hoveredTime);
         var t = new Text(info);
         var b = t.getBoundsInLocal();
         var tooltipWidth = b.getWidth() + 20;
@@ -48,6 +57,7 @@ public class OverlayCanvas extends MyCanvas {
 
         // Guiding line
         g.setStroke(Color.color(0.55d, 0.55d, 0.55d));
-        g.strokeLine(currentX, 0, currentX, canvas.getHeight());
+        final var guidingLineX = timelineHelper.dateTimeToPixel(hoveredTime);
+        g.strokeLine(guidingLineX, 0, guidingLineX, canvas.getHeight());
     }
 }

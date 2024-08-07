@@ -21,11 +21,12 @@ import widget.TimelineCanvas;
 
 import java.awt.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Locale;
 
 public class HelloFX extends Application {
-
-    private ObservableList<LoggedEntry> loggedEntries;
+    private TimelineCanvas timelineCanvas;
+    private ObservableList<LoggedEntry> tableLoggedEntries;
 
     @Override
     public void start(Stage stage) {
@@ -45,21 +46,29 @@ public class HelloFX extends Application {
         pane.setPrefWidth(500);
         pane.setMinHeight(300);
 
-        var timeline_canvas = new TimelineCanvas(500, 500, pane);
-        var overlay_canvas = new OverlayCanvas(500, 500, pane);
+        timelineCanvas = new TimelineCanvas(500, 500, pane);
+        var overlay_canvas = new OverlayCanvas(500, 500, pane, timelineCanvas);
         overlay_canvas.toFront();
 
         pane.widthProperty().addListener((observable -> {
-            timeline_canvas.repaint();
+            timelineCanvas.updateConstants();
+            timelineCanvas.repaint();
             overlay_canvas.repaint();
         }));
-        pane.getChildren().addAll(timeline_canvas, overlay_canvas);
+
+        pane.heightProperty().addListener((observable -> {
+            timelineCanvas.updateConstants();
+            timelineCanvas.repaint();
+            overlay_canvas.repaint();
+        }));
+
+        pane.getChildren().addAll(timelineCanvas, overlay_canvas);
 
         // List view of logged entries
         final var tableView = new TableView<LoggedEntry>();
 
-        loggedEntries = FXCollections.observableArrayList();
-        tableView.setItems(loggedEntries);
+        tableLoggedEntries = FXCollections.observableArrayList();
+        tableView.setItems(tableLoggedEntries);
         changeDate(LocalDate.now());
 
         // TODO: Make an informed decision here
@@ -115,7 +124,9 @@ public class HelloFX extends Application {
         // TODO: Make an informed decision here
         stage.setMinHeight(500);
         stage.setMinWidth(650);
-        timeline_canvas.repaint();
+
+        timelineCanvas.updateConstants();
+        timelineCanvas.repaint();
         overlay_canvas.repaint();
     }
 
@@ -124,13 +135,14 @@ public class HelloFX extends Application {
     }
 
     private void changeDate(LocalDate date) {
-        loggedEntries.clear();
+        tableLoggedEntries.clear();
         var loggedEntryRepository = new LoggedEntryRepository();
         final var databaseHelper = new DatabaseHelper();
 
         try {
-            var entries = loggedEntryRepository.getAllByDate(databaseHelper.connect(), date);
-            loggedEntries.addAll(entries);
+            final var loggedEntries = loggedEntryRepository.getAllByDate(databaseHelper.connect(), date);
+            tableLoggedEntries.addAll(loggedEntries);
+            timelineCanvas.setEntries(date, loggedEntries);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
