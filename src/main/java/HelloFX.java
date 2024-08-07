@@ -78,8 +78,8 @@ public class HelloFX extends Application {
                     return new SimpleStringProperty(DateTimeHelper.toTimeString(loggedEntry.getDuration()));
                 }),
                 createColumn("Application", col -> {
-                    // TODO - Replace with the name of the application
-                    return new SimpleStringProperty("");
+                    final var loggedEntry = col.getValue();
+                    return new SimpleStringProperty(loggedEntry.getApplicationWindow().getApplication().getName());
                 }),
                 createColumn("Title", col -> {
                     final var loggedEntry = col.getValue();

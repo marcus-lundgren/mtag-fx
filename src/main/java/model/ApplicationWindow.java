@@ -18,4 +18,8 @@ public class ApplicationWindow {
     public String getTitle() {
         return title;
     }
+
+    public Application getApplication() {
+        return application;
+    }
 }
