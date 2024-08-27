@@ -4,6 +4,7 @@ import helper.TimelineHelper;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import model.LoggedEntry;
+import model.TaggedEntry;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -22,7 +23,7 @@ public class TimelineCanvas extends MyCanvas {
         timelineHelper = createTimelineHelper();
     }
 
-    public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries) {
+    public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries, ArrayList<TaggedEntry> taggedEntries) {
         this.startDateTime = date.atStartOfDay();
         timelineHelper = createTimelineHelper();
     }
