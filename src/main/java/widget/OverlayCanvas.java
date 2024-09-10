@@ -5,9 +5,10 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
-import java.time.LocalDateTime;
-
 public class OverlayCanvas extends MyCanvas {
+    private static final Color GUIDINGLINE_COLOR = Color.color(0.55d, 0.55d, 0.55d);
+    private static final Color TOOLTIP_BACKGROUND_COLOR = Color.rgb(75, 75, 175, 0.75);
+
     private final TimelineCanvas timelineCanvas;
     private double currentX = 0f;
     private double currentY = 0f;
@@ -32,32 +33,37 @@ public class OverlayCanvas extends MyCanvas {
         // Tooltip data
         final var timelineHelper = timelineCanvas.getTimelineHelper();
         final var hoveredTime = timelineHelper.pixelToDatetime(currentX);
+        final var canvasWidth = canvas.getWidth();
+        final var canvasHeight = canvas.getHeight();
 
-        String info = DateTimeHelper.toTimeString(hoveredTime);
-        var t = new Text(info);
-        var b = t.getBoundsInLocal();
-        var tooltipWidth = b.getWidth() + 20;
+        final var info = DateTimeHelper.toTimeString(hoveredTime);
+        final var t = new Text(info);
+        final var b = t.getBoundsInLocal();
+        final var tooltipWidth = b.getWidth() + 20;
+        final var tooltipHeight = b.getHeight() + 20;
 
         // Clear the canvas
-        var g = canvas.getGraphicsContext2D();
-        g.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        final var g = canvas.getGraphicsContext2D();
+        g.clearRect(0, 0, canvasWidth, canvasHeight);
 
         // "Tooltip" draw
-        var toolTipX = Math.min(currentX, canvas.getWidth() - tooltipWidth);
+        var toolTipX = Math.min(currentX, canvasWidth - tooltipWidth);
         toolTipX = Math.max(toolTipX, 0);
-        var toolTipY = currentY;
+
+        var toolTipY = Math.min(currentY, canvasHeight - tooltipHeight);
+        toolTipY = Math.max(toolTipY, 0);
 
         // - The background
-        g.setFill(Color.rgb(75, 75, 175, 0.75));
-        g.fillRect(toolTipX, toolTipY, tooltipWidth, b.getHeight() + 20);
+        g.setFill(TOOLTIP_BACKGROUND_COLOR);
+        g.fillRect(toolTipX, toolTipY, tooltipWidth, tooltipHeight);
 
         // - The text
         g.setFill(Color.WHITE);
-        g.fillText(info, toolTipX + 10, toolTipY + b.getHeight() + 10);
+        g.fillText(info, toolTipX + 10, toolTipY + tooltipHeight - 10);
 
         // Guiding line
-        g.setStroke(Color.color(0.55d, 0.55d, 0.55d));
+        g.setStroke(GUIDINGLINE_COLOR);
         final var guidingLineX = timelineHelper.dateTimeToPixel(hoveredTime);
-        g.strokeLine(guidingLineX, 0, guidingLineX, canvas.getHeight());
+        g.strokeLine(guidingLineX, 0, guidingLineX, canvasHeight);
     }
 }
