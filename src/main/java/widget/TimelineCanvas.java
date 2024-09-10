@@ -19,6 +19,12 @@ public class TimelineCanvas extends MyCanvas {
     private TimelineHelper timelineHelper;
     private int minuteIncrement;
 
+    private static final Color TIMELINE_ON_THE_HOUR_COLOR = Color.color(0.9d, 0.9d, 0.3d);
+    private static final Color TIMELINE_MINUTE_COLOR = Color.color(0.2d, 0.8d, 1);
+    private static final Color TIMELINE_LINE_COLOR = Color.color(0.7d, 0.7d, 0.7d, 1d);
+    private static final Color TIMELINE_PADDING_COLOR = new Color(0.5, 0.5, 0.5, 0.5);
+    private static final Color BACKGROUND_COLOR = new Color(0.35d, 0.35d, 0.35d, 1d);
+
     public TimelineCanvas(double width, double height, Pane parent) {
         super(width, height, parent);
         startDateTime = LocalDate.now().atStartOfDay();
@@ -42,38 +48,40 @@ public class TimelineCanvas extends MyCanvas {
         var timelineHeight = 30d;
         var taggedEntriesStartY = timelineHeight + 10d;
         var taggedEntriesHeight = 40d;
-        var canvasWidth = canvas.getWidth();
+        final var canvasWidth = canvas.getWidth();
+        final var canvasHeight = canvas.getHeight();
 
         // Clear the canvas
-        g.clearRect(0, 0, canvasWidth, canvas.getHeight());
+        g.clearRect(0, 0, canvasWidth, canvasHeight);
 
         // Timeline
         // - Background
-        g.setFill(new Color(0.35d, 0.35d, 0.35d, 1d));
+        g.setFill(BACKGROUND_COLOR);
         g.fillRect(0, 0, canvasWidth, timelineHeight);
 
         // - Timelines
-        var currentTime = startDateTime.minusMinutes(startDateTime.getMinute()).minusSeconds(startDateTime.getSecond());
         final var endTime = startDateTime.plus(currentDelta);
 
-        for(; currentTime.isBefore(endTime); currentTime = currentTime.plusMinutes(minuteIncrement)) {
+        final int TIMELINE_TEXT_PADDING = 10;
+        for(var currentTime = startDateTime.minusMinutes(startDateTime.getMinute()).minusSeconds(startDateTime.getSecond());
+            currentTime.isBefore(endTime);
+            currentTime = currentTime.plusMinutes(minuteIncrement)) {
             final var currentTimeXPosition = timelineHelper.dateTimeToPixel(currentTime);
 
             // Line for the time
-            g.setStroke(Color.color(0.7d, 0.7d, 0.7d, 1d));
+            g.setStroke(TIMELINE_LINE_COLOR);
             g.strokeLine(currentTimeXPosition, timelineHeight - 10, currentTimeXPosition, timelineHeight);
 
             // The text
             if (currentTime.getMinute() == 0) {
-                g.setFill(Color.color(0.9d, 0.9d, 0.3d));
+                g.setFill(TIMELINE_ON_THE_HOUR_COLOR);
             } else {
-                g.setFill(Color.color(0.2d, 0.8d, 1));
+                g.setFill(TIMELINE_MINUTE_COLOR);
             }
 
             final var timeString = DateTimeHelper.toTimelineTimeString(currentTime);
             final var text = new Text(timeString);
             final var bound = text.getBoundsInLocal();
-            final int TIMELINE_TEXT_PADDING = 10;
             final var textWidthToUse = bound.getWidth() + TIMELINE_TEXT_PADDING;
             g.fillText(timeString, currentTimeXPosition - (textWidthToUse / 2) + (TIMELINE_TEXT_PADDING / 2d), bound.getHeight());
         }
@@ -85,9 +93,9 @@ public class TimelineCanvas extends MyCanvas {
         g.fillRect(20, taggedEntriesStartY, canvasWidth / 2, taggedEntriesHeight);
 
         // Sides
-        g.setFill(new Color(0.5, 0.5, 0.5, 0.5));
-        g.fillRect(0, 0, canvasTimelinePadding, canvas.getHeight());
-        g.fillRect(canvas.getWidth() - canvasTimelinePadding, 0, canvasTimelinePadding, canvas.getHeight());
+        g.setFill(TIMELINE_PADDING_COLOR);
+        g.fillRect(0, 0, canvasTimelinePadding, canvasHeight);
+        g.fillRect(canvasWidth - canvasTimelinePadding, 0, canvasTimelinePadding, canvasHeight);
     }
 
     public void updateConstants() {
