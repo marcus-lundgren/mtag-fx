@@ -19,6 +19,7 @@ import java.util.Locale;
 
 public class HelloFX extends Application {
     private TimelineCanvas timelineCanvas;
+    private OverlayCanvas overlayCanvas;
     private ObservableList<LoggedEntry> tableLoggedEntries;
     private ObservableList<TaggedEntry> tableTaggedEntries;
 
@@ -41,22 +42,18 @@ public class HelloFX extends Application {
         pane.setMinHeight(300);
 
         timelineCanvas = new TimelineCanvas(500, 500, pane);
-        var overlay_canvas = new OverlayCanvas(500, 500, pane, timelineCanvas);
-        overlay_canvas.toFront();
+        overlayCanvas = new OverlayCanvas(500, 500, pane, timelineCanvas);
+        overlayCanvas.toFront();
 
         pane.widthProperty().addListener((observable -> {
-            timelineCanvas.updateConstants();
-            timelineCanvas.repaint();
-            overlay_canvas.repaint();
+            repaintCanvases();
         }));
 
         pane.heightProperty().addListener((observable -> {
-            timelineCanvas.updateConstants();
-            timelineCanvas.repaint();
-            overlay_canvas.repaint();
+            repaintCanvases();
         }));
 
-        pane.getChildren().addAll(timelineCanvas, overlay_canvas);
+        pane.getChildren().addAll(timelineCanvas, overlayCanvas);
 
         // Table views
         tableLoggedEntries = FXCollections.observableArrayList();
@@ -95,9 +92,7 @@ public class HelloFX extends Application {
 
         changeDate(LocalDate.now());
 
-        timelineCanvas.updateConstants();
-        timelineCanvas.repaint();
-        overlay_canvas.repaint();
+        repaintCanvases();
     }
 
     public static void main(String[] args) {
@@ -123,5 +118,11 @@ public class HelloFX extends Application {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private void repaintCanvases() {
+        timelineCanvas.updateConstants();
+        timelineCanvas.repaint();
+        overlayCanvas.repaint();
     }
 }

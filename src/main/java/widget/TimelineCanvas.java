@@ -1,5 +1,6 @@
 package widget;
 
+import helper.ColorHelper;
 import helper.DateTimeHelper;
 import helper.TimelineHelper;
 import javafx.scene.layout.Pane;
@@ -15,9 +16,11 @@ import java.util.ArrayList;
 
 public class TimelineCanvas extends MyCanvas {
     private LocalDateTime startDateTime;
+    private ArrayList<LoggedEntry> loggedEntries;
     private Duration currentDelta;
     private TimelineHelper timelineHelper;
     private int minuteIncrement;
+    private final ColorHelper colorHelper;
 
     private static final Color TIMELINE_ON_THE_HOUR_COLOR = Color.color(0.9d, 0.9d, 0.3d);
     private static final Color TIMELINE_MINUTE_COLOR = Color.color(0.2d, 0.8d, 1);
@@ -30,11 +33,14 @@ public class TimelineCanvas extends MyCanvas {
         startDateTime = LocalDate.now().atStartOfDay();
         currentDelta = Duration.ofSeconds(23 * 3600 + 59 * 60 + 59);
         timelineHelper = createTimelineHelper();
+        colorHelper = new ColorHelper();
     }
 
     public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries, ArrayList<TaggedEntry> taggedEntries) {
         this.startDateTime = date.atStartOfDay();
+        this.loggedEntries = loggedEntries;
         timelineHelper = createTimelineHelper();
+        repaint();
     }
 
     private TimelineHelper createTimelineHelper() {
@@ -44,10 +50,10 @@ public class TimelineCanvas extends MyCanvas {
     @Override
     public void repaint() {
         // Constants
-        var g = canvas.getGraphicsContext2D();
-        var timelineHeight = 30d;
-        var taggedEntriesStartY = timelineHeight + 10d;
-        var taggedEntriesHeight = 40d;
+        final var g = canvas.getGraphicsContext2D();
+        final var timelineHeight = 30d;
+        final var loggedEntriesStartY = timelineHeight + 10d;
+        final var entriesHeight = 40d;
         final var canvasWidth = canvas.getWidth();
         final var canvasHeight = canvas.getHeight();
 
@@ -89,8 +95,18 @@ public class TimelineCanvas extends MyCanvas {
         // - The time text
 
         // Tagged entries
-        g.setFill(new Color(0.35d, 0.55d, 0.35d, 1d));
-        g.fillRect(20, taggedEntriesStartY, canvasWidth / 2, taggedEntriesHeight);
+//        g.setFill(new Color(0.35d, 0.55d, 0.35d, 1d));
+//        g.fillRect(20, loggedEntriesStartY, canvasWidth / 2, entriesHeight);
+
+        // Logged entries
+        for (var entry : loggedEntries) {
+            final var startX = timelineHelper.dateTimeToPixel(entry.getStart());
+            final var endX = timelineHelper.dateTimeToPixel(entry.getStop());
+            final var width = endX - startX;
+            final var color = colorHelper.toColor(entry.getApplicationWindow().getApplication().getName());
+            g.setFill(color);
+            g.fillRect(startX, loggedEntriesStartY, width, entriesHeight);
+        }
 
         // Sides
         g.setFill(TIMELINE_PADDING_COLOR);
