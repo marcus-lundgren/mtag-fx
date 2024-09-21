@@ -18,6 +18,14 @@ public class TaggedEntry {
         this.databaseId = databaseId;
     }
 
+    public LocalDateTime getStart() {
+        return start;
+    }
+
+    public LocalDateTime getStop() {
+        return stop;
+    }
+
     public Duration getDuration() {
         return Duration.between(start, stop);
     }
