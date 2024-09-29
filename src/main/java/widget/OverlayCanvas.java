@@ -12,20 +12,27 @@ public class OverlayCanvas extends MyCanvas {
     private final TimelineCanvas timelineCanvas;
     private double currentX = 0f;
     private double currentY = 0f;
+    private String entryInfoText;
 
     public OverlayCanvas(double width, double height, Pane parent, TimelineCanvas timelineCanvas) {
         super(width, height, parent);
         this.timelineCanvas = timelineCanvas;
 
         setOnMouseMoved(e -> {
-            setCurrentPosition(e.getX(), e.getY());
+            updateState(e.getX(), e.getY());
             repaint();
         });
     }
 
-    private void setCurrentPosition(double x, double y) {
+    private void updateState(double x, double y) {
         currentX = x;
         currentY = y;
+
+        entryInfoText = null;
+        var entry = timelineCanvas.getVisibleTimelineEntry(x, y);
+        if (entry != null) {
+            entryInfoText = entry.getInfoText();
+        }
     }
 
     @Override
@@ -36,11 +43,11 @@ public class OverlayCanvas extends MyCanvas {
         final var canvasWidth = canvas.getWidth();
         final var canvasHeight = canvas.getHeight();
 
-        final var info = DateTimeHelper.toTimeString(hoveredTime);
+        final var info = DateTimeHelper.toTimeString(hoveredTime) + (entryInfoText != null ? '\n' + entryInfoText : "");
         final var t = new Text(info);
         final var b = t.getBoundsInLocal();
         final var tooltipWidth = b.getWidth() + 20;
-        final var tooltipHeight = b.getHeight() + 20;
+        final var tooltipHeight = b.getHeight() + 30;
 
         // Clear the canvas
         final var g = canvas.getGraphicsContext2D();
@@ -59,7 +66,7 @@ public class OverlayCanvas extends MyCanvas {
 
         // - The text
         g.setFill(Color.WHITE);
-        g.fillText(info, toolTipX + 10, toolTipY + tooltipHeight - 10);
+        g.fillText(info, toolTipX + 10, toolTipY + 30);
 
         // Guiding line
         g.setStroke(GUIDINGLINE_COLOR);

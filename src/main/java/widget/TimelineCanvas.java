@@ -51,16 +51,14 @@ public class TimelineCanvas extends MyCanvas {
     public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries, ArrayList<TaggedEntry> taggedEntries) {
         this.loggedEntries.clear();
         for (var loggedEntry: loggedEntries) {
-            final var entry = new TimelineEntry(loggedEntry.getStart(),
-                    loggedEntry.getStop(),
+            final var entry = new TimelineEntry(loggedEntry,
                     colorHelper.toColor(loggedEntry.getApplicationWindow().getApplication().getName()));
             this.loggedEntries.add(entry);
         }
 
         this.taggedEntries.clear();
         for (var taggedEntry: taggedEntries) {
-            final var entry = new TimelineEntry(taggedEntry.getStart(),
-                    taggedEntry.getStop(),
+            final var entry = new TimelineEntry(taggedEntry,
                     colorHelper.toColor(taggedEntry.getCategory().getName()));
             this.taggedEntries.add(entry);
         }
@@ -153,6 +151,69 @@ public class TimelineCanvas extends MyCanvas {
         fillVisibleEntries(visibleTaggedEntries, taggedEntries, viewPortStart, viewPortEnd);
     }
 
+    public TimelineEntry getVisibleTimelineEntry(double x, double y) {
+        if (TAGGED_ENTRIES_START_Y <= y && y <= TAGGED_ENTRIES_START_Y + ENTRIES_HEIGHT) {
+            // Empty list, no need to iterate
+            if (visibleTaggedEntries.isEmpty()) {
+                return null;
+            }
+
+            // Check if the given X is to the right of the last entry's end
+            final var lastEntry = visibleTaggedEntries.getLast();
+            if (lastEntry.getEndX() < x) {
+                return null;
+            }
+
+            // Perform a linear search, as we do not anticipate any larger quantities of
+            // tagged entries.
+            for (var entry: visibleTaggedEntries) {
+                // The given X is before the current entries start, which means
+                // that it can never be within any entry in the list.
+                if (x < entry.getStartX()) {
+                    break;
+                }
+
+                // The given X is within the bounds of the entry.
+                if (x <= entry.getEndX()) {
+                    return entry;
+                }
+            }
+
+            return null;
+        }
+
+        if (LOGGED_ENTRIES_START_Y <= y && y <= LOGGED_ENTRIES_START_Y + ENTRIES_HEIGHT) {
+            // Empty list, no need to iterate
+            if (visibleLoggedEntries.isEmpty()) {
+                return null;
+            }
+
+            // Perform a binary search, as the list of logged entries is expected to contain many entries.
+            int currentStartIndex = 0;
+            int currentEndIndex = visibleLoggedEntries.size() - 1;
+            while (currentStartIndex <= currentEndIndex) {
+                final var middle = (currentStartIndex + currentEndIndex) / 2;
+                final var currentEntry = visibleLoggedEntries.get(middle);
+
+                if (currentEntry.getStartX() <= x && x <= currentEntry.getEndX()) {
+                    // We've found the entry
+                    return currentEntry;
+                } else if (x < currentEntry.getStartX()) {
+                    // The given x is before the current entries start. Check the left half of the entries
+                    currentEndIndex = middle - 1;
+                } else {
+                    // The given x is after the current entries end. Check the right half of the entries
+                    currentStartIndex = middle + 1;
+                }
+            }
+
+            // No entry found
+            return null;
+        }
+
+        return null;
+    }
+
     private void fillVisibleEntries(ArrayList<TimelineEntry> visibleEntries, ArrayList<TimelineEntry> entries,
                                     LocalDateTime viewPortStart, LocalDateTime viewPortEnd) {
         visibleEntries.clear();
@@ -230,14 +291,26 @@ public class TimelineCanvas extends MyCanvas {
         private final LocalDateTime startDateTime;
         private final LocalDateTime endDateTime;
 
+        private final String infoText;
+
         private double startX = 0;
         private double endX = 0;
         private double width = 0;
 
-        public TimelineEntry(LocalDateTime start, LocalDateTime end, Color color) {
-            this.startDateTime = start;
-            this.endDateTime = end;
+        public TimelineEntry(LoggedEntry entry, Color color) {
+            startDateTime = entry.getStart();
+            endDateTime = entry.getStop();
             this.color = color;
+            infoText = String.format("%s\n%s",
+                    entry.getApplicationWindow().getTitle(),
+                    entry.getApplicationWindow().getApplication().getName());
+        }
+
+        public TimelineEntry(TaggedEntry entry, Color color) {
+            startDateTime = entry.getStart();
+            endDateTime = entry.getStop();
+            this.color = color;
+            infoText = entry.getCategory().getName();
         }
 
         public void setXPositions(double startX, double endX) {
@@ -268,6 +341,10 @@ public class TimelineCanvas extends MyCanvas {
 
         public LocalDateTime getEndDateTime() {
             return endDateTime;
+        }
+
+        public String getInfoText() {
+            return infoText;
         }
     }
 }
