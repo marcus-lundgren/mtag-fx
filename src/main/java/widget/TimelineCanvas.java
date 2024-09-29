@@ -22,9 +22,14 @@ public class TimelineCanvas extends MyCanvas {
     private static final int TIMELINE_TEXT_PADDING = 10;
 
     private LocalDateTime startDateTime;
-    private ArrayList<LoggedEntry> loggedEntries;
-    private ArrayList<TaggedEntry> taggedEntries;
     private Duration currentDelta;
+
+    private final ArrayList<TimelineEntry> loggedEntries = new ArrayList<>();
+    private final ArrayList<TimelineEntry> taggedEntries = new ArrayList<>();
+
+    private final ArrayList<TimelineEntry> visibleLoggedEntries = new ArrayList<>();
+    private final ArrayList<TimelineEntry> visibleTaggedEntries = new ArrayList<>();
+
     private TimelineHelper timelineHelper;
     private int minuteIncrement;
     private final ColorHelper colorHelper;
@@ -44,10 +49,23 @@ public class TimelineCanvas extends MyCanvas {
     }
 
     public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries, ArrayList<TaggedEntry> taggedEntries) {
-        this.startDateTime = date.atStartOfDay();
-        this.loggedEntries = loggedEntries;
-        this.taggedEntries = taggedEntries;
-        timelineHelper = createTimelineHelper();
+        this.loggedEntries.clear();
+        for (var loggedEntry: loggedEntries) {
+            final var entry = new TimelineEntry(loggedEntry.getStart(),
+                    loggedEntry.getStop(),
+                    colorHelper.toColor(loggedEntry.getApplicationWindow().getApplication().getName()));
+            this.loggedEntries.add(entry);
+        }
+
+        this.taggedEntries.clear();
+        for (var taggedEntry: taggedEntries) {
+            final var entry = new TimelineEntry(taggedEntry.getStart(),
+                    taggedEntry.getStop(),
+                    colorHelper.toColor(taggedEntry.getCategory().getName()));
+            this.taggedEntries.add(entry);
+        }
+
+        updateConstants();
         repaint();
     }
 
@@ -71,7 +89,7 @@ public class TimelineCanvas extends MyCanvas {
         g.fillRect(0, 0, canvasWidth, TIMELINE_HEIGHT);
 
         // - Timelines
-        final var endTime = startDateTime.plus(currentDelta);
+        final var endTime = startDateTime.plus(currentDelta).plusMinutes(minuteIncrement);
 
         for(var currentTime = startDateTime.minusMinutes(startDateTime.getMinute()).minusSeconds(startDateTime.getSecond());
             currentTime.isBefore(endTime);
@@ -97,23 +115,15 @@ public class TimelineCanvas extends MyCanvas {
         }
 
         // Tagged entries
-        for (var entry : taggedEntries) {
-            final var startX = timelineHelper.dateTimeToPixel(entry.getStart());
-            final var endX = timelineHelper.dateTimeToPixel(entry.getStop());
-            final var width = endX - startX;
-            final var color = colorHelper.toColor(entry.getCategory().getName());
-            g.setFill(color);
-            g.fillRect(startX, TAGGED_ENTRIES_START_Y, width, ENTRIES_HEIGHT);
+        for (var entry : visibleTaggedEntries) {
+            g.setFill(entry.getColor());
+            g.fillRect(entry.getStartX(), TAGGED_ENTRIES_START_Y, entry.getWidth(), ENTRIES_HEIGHT);
         }
 
         // Logged entries
-        for (var entry : loggedEntries) {
-            final var startX = timelineHelper.dateTimeToPixel(entry.getStart());
-            final var endX = timelineHelper.dateTimeToPixel(entry.getStop());
-            final var width = endX - startX;
-            final var color = colorHelper.toColor(entry.getApplicationWindow().getApplication().getName());
-            g.setFill(color);
-            g.fillRect(startX, LOGGED_ENTRIES_START_Y, width, ENTRIES_HEIGHT);
+        for (var entry : visibleLoggedEntries) {
+            g.setFill(entry.getColor());
+            g.fillRect(entry.getStartX(), LOGGED_ENTRIES_START_Y, entry.getWidth(), ENTRIES_HEIGHT);
         }
 
         // Sides
@@ -125,6 +135,44 @@ public class TimelineCanvas extends MyCanvas {
     public void updateConstants() {
         timelineHelper = createTimelineHelper();
         minuteIncrement = calculateMinuteIncrement();
+
+        final var currentDayOfYear = startDateTime.getDayOfYear();
+        var viewPortStart = startDateTime.minusMinutes(minuteIncrement);
+        if (viewPortStart.getDayOfYear() != currentDayOfYear) {
+            viewPortStart = viewPortStart.plus(
+                    Duration.between(viewPortStart, startDateTime.toLocalDate()));
+        }
+
+        var viewPortEnd = startDateTime.plus(currentDelta).plusMinutes(minuteIncrement);
+        if (viewPortStart.getDayOfYear() != currentDayOfYear) {
+            viewPortEnd = viewPortEnd.minus(
+                    Duration.between(viewPortEnd.toLocalDate(), viewPortEnd).minusSeconds(1));
+        }
+
+        fillVisibleEntries(visibleLoggedEntries, loggedEntries, viewPortStart, viewPortEnd);
+        fillVisibleEntries(visibleTaggedEntries, taggedEntries, viewPortStart, viewPortEnd);
+    }
+
+    private void fillVisibleEntries(ArrayList<TimelineEntry> visibleEntries, ArrayList<TimelineEntry> entries,
+                                    LocalDateTime viewPortStart, LocalDateTime viewPortEnd) {
+        visibleEntries.clear();
+        var lastX = 0d;
+        for (var entry: entries) {
+            entry.setXPositions(
+                    timelineHelper.dateTimeToPixel(entry.getStartDateTime()),
+                    timelineHelper.dateTimeToPixel(entry.getEndDateTime()));
+
+            // The entry is not within the viewport. No need to handle it further at the moment
+            if (entry.getEndDateTime().isBefore(viewPortStart)
+                    || viewPortEnd.isBefore(entry.getStartDateTime())) {
+                continue;
+            }
+
+            if (lastX != entry.getEndX()) {
+                lastX = entry.getEndX();
+                visibleEntries.add(entry);
+            }
+        }
     }
 
     public TimelineHelper getTimelineHelper() {
@@ -174,5 +222,52 @@ public class TimelineCanvas extends MyCanvas {
 
         // We are very zoomed in. Default to 1 minute increment.
         return 1;
+    }
+
+    public class TimelineEntry {
+        private final Color color;
+
+        private final LocalDateTime startDateTime;
+        private final LocalDateTime endDateTime;
+
+        private double startX = 0;
+        private double endX = 0;
+        private double width = 0;
+
+        public TimelineEntry(LocalDateTime start, LocalDateTime end, Color color) {
+            this.startDateTime = start;
+            this.endDateTime = end;
+            this.color = color;
+        }
+
+        public void setXPositions(double startX, double endX) {
+            this.startX = Math.floor(startX);
+            this.endX = Math.ceil(endX);
+            this.width = endX - startX;
+        }
+
+        public double getStartX() {
+            return startX;
+        }
+
+        public double getEndX() {
+            return endX;
+        }
+
+        public double getWidth() {
+            return width;
+        }
+
+        public Color getColor() {
+            return color;
+        }
+
+        public LocalDateTime getStartDateTime() {
+            return startDateTime;
+        }
+
+        public LocalDateTime getEndDateTime() {
+            return endDateTime;
+        }
     }
 }
