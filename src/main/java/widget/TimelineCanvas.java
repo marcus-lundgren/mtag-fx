@@ -316,7 +316,7 @@ public class TimelineCanvas extends MyCanvas {
         public void setXPositions(double startX, double endX) {
             this.startX = Math.floor(startX);
             this.endX = Math.ceil(endX);
-            this.width = endX - startX;
+            this.width = this.endX - this.startX;
         }
 
         public double getStartX() {
