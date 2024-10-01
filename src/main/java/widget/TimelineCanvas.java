@@ -291,7 +291,7 @@ public class TimelineCanvas extends MyCanvas {
         private final LocalDateTime startDateTime;
         private final LocalDateTime endDateTime;
 
-        private final String infoText;
+        private final ArrayList<String> infoText = new ArrayList<>();
 
         private double startX = 0;
         private double endX = 0;
@@ -301,16 +301,16 @@ public class TimelineCanvas extends MyCanvas {
             startDateTime = entry.getStart();
             endDateTime = entry.getStop();
             this.color = color;
-            infoText = String.format("%s\n%s",
-                    entry.getApplicationWindow().getTitle(),
-                    entry.getApplicationWindow().getApplication().getName());
+
+            infoText.add(entry.getApplicationWindow().getTitle());
+            infoText.add(entry.getApplicationWindow().getApplication().getName());
         }
 
         public TimelineEntry(TaggedEntry entry, Color color) {
             startDateTime = entry.getStart();
             endDateTime = entry.getStop();
             this.color = color;
-            infoText = entry.getCategory().getName();
+            infoText.add(entry.getCategory().getName());
         }
 
         public void setXPositions(double startX, double endX) {
@@ -343,7 +343,7 @@ public class TimelineCanvas extends MyCanvas {
             return endDateTime;
         }
 
-        public String getInfoText() {
+        public ArrayList<String> getInfoText() {
             return infoText;
         }
     }
