@@ -10,6 +10,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.LoggedEntry;
 import model.TaggedEntry;
+import repository.ActivityEntryRepository;
 import repository.LoggedEntryRepository;
 import repository.TaggedEntryRepository;
 import widget.*;
@@ -22,6 +23,7 @@ public class HelloFX extends Application {
     private OverlayCanvas overlayCanvas;
     private ObservableList<LoggedEntry> tableLoggedEntries;
     private ObservableList<TaggedEntry> tableTaggedEntries;
+    private final DatabaseHelper databaseHelper = new DatabaseHelper();
 
     @Override
     public void start(Stage stage) {
@@ -105,7 +107,7 @@ public class HelloFX extends Application {
 
         final var loggedEntryRepository = new LoggedEntryRepository();
         final var taggedEntryRepository = new TaggedEntryRepository();
-        final var databaseHelper = new DatabaseHelper();
+        final var activityEntryRepository = new ActivityEntryRepository();
 
         try (final var connection = databaseHelper.connect()) {
             final var loggedEntries = loggedEntryRepository.getAllByDate(connection, date);
@@ -114,7 +116,9 @@ public class HelloFX extends Application {
             final var taggedEntries = taggedEntryRepository.getAllByDate(connection, date);
             tableTaggedEntries.addAll(taggedEntries);
 
-            timelineCanvas.setEntries(date, loggedEntries, taggedEntries);
+            final var activityEntries = activityEntryRepository.getAllByDate(connection, date);
+
+            timelineCanvas.setEntries(date, loggedEntries, taggedEntries, activityEntries);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

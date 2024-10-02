@@ -37,7 +37,7 @@ public class OverlayCanvas extends MyCanvas {
         final var hoveredTime = timelineHelper.pixelToDatetime(currentX);
 
         tooltipAttributes.clear();
-        tooltipAttributes.addText(DateTimeHelper.toTimeString(hoveredTime));
+        tooltipAttributes.addText(DateTimeHelper.toTimeString(hoveredTime), Color.YELLOW);
         if (hoveredEntry != null) {
             tooltipAttributes.addText(hoveredEntry);
         }
@@ -71,18 +71,11 @@ public class OverlayCanvas extends MyCanvas {
         final var textX = toolTipX + 10;
         var currentTextY = toolTipY + 30;
 
-        final var infoTexts = tooltipAttributes.getInfoTexts();
-        boolean isFirstText = true;
-        for (int i = 0; i < infoTexts.size(); ++i) {
-            if (isFirstText) {
-                g.setFill(Color.YELLOW);
-                isFirstText = false;
-            } else {
-                currentTextY += TooltipAttributes.INFO_TEXT_LINE_PADDING + tooltipAttributes.getHeight(i - 1);
-                g.setFill(Color.WHITE);
-            }
-
-            g.fillText(infoTexts.get(i), textX, currentTextY);
+        final var infoTextRows = tooltipAttributes.getInfoTextRows();
+        for (var row: infoTextRows) {
+            g.setFill(row.color());
+            g.fillText(row.text(), textX, currentTextY);
+            currentTextY += TooltipAttributes.INFO_TEXT_LINE_PADDING + row.height();
         }
 
         // Guiding line
@@ -93,18 +86,16 @@ public class OverlayCanvas extends MyCanvas {
     public class TooltipAttributes {
         public static final int INFO_TEXT_LINE_PADDING = 2;
 
-        private final ArrayList<String> infoTexts = new ArrayList<>();
-        private final ArrayList<Double> textHeights = new ArrayList<>();
+        private final ArrayList<InfoTextRow> infoTextRows = new ArrayList<>();
 
         private double maxTextWidth;
 
         public void clear() {
-            infoTexts.clear();
-            textHeights.clear();
+            infoTextRows.clear();
             maxTextWidth = -1;
         }
 
-        public void addText(String text) {
+        public void addText(String text, Color color) {
             final var t = new Text(text);
             final var b = t.getBoundsInLocal();
 
@@ -112,13 +103,21 @@ public class OverlayCanvas extends MyCanvas {
                 maxTextWidth = b.getWidth();
             }
 
-            infoTexts.add(text);
-            textHeights.add(b.getHeight());
+            infoTextRows.add(new InfoTextRow(text, color, b.getHeight()));
         }
 
-        public void addText(TimelineCanvas.TimelineEntry entry) {
+        public void addText(TimelineCanvas.HoveredTimelineEntries entries) {
+            addText(entries.entry());
+            addText(entries.activityEntry());
+        }
+
+        private void addText(TimelineCanvas.TimelineEntry entry) {
+            if (entry == null) {
+                return;
+            }
+
             for (var t: entry.getInfoText()) {
-                addText(t);
+                addText(t, entry.getTextColor());
             }
         }
 
@@ -127,15 +126,13 @@ public class OverlayCanvas extends MyCanvas {
         }
 
         public double getTooltipHeight() {
-            return textHeights.stream().mapToDouble(x -> x).sum() + INFO_TEXT_LINE_PADDING * ( - 1) + 30;
+            return infoTextRows.stream().mapToDouble(InfoTextRow::height).sum() + INFO_TEXT_LINE_PADDING * ( - 1) + 30;
         }
 
-        public ArrayList<String> getInfoTexts() {
-            return infoTexts;
+        public ArrayList<InfoTextRow> getInfoTextRows() {
+            return infoTextRows;
         }
 
-        public Double getHeight(int index) {
-            return textHeights.get(index);
-        }
+        public record InfoTextRow(String text, Color color, double height) { }
     }
 }

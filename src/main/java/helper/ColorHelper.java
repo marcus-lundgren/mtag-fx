@@ -8,6 +8,10 @@ import java.util.HexFormat;
 
 public class ColorHelper {
     private final MessageDigest digest;
+    private static final Color ACTIVITY_ENTRY_IS_ACTIVE_BACKGROUND_COLOR = Color.color(0.54d, 0.85d, 0.54d);
+    private static final Color ACTIVITY_ENTRY_IS_INACTIVE_BACKGROUND_COLOR = Color.color(0.5d, 0.5d, 0.5d);
+    private static final Color ACTIVITY_ENTRY_IS_ACTIVE_TEXT_COLOR = Color.color(0.12d, 0.93d, 0.12d);
+    private static final Color ACTIVITY_ENTRY_IS_INACTIVE_TEXT_COLOR = Color.color(0.75d, 0.75d, 0.75d);
 
     public ColorHelper() {
         try {
@@ -15,6 +19,14 @@ public class ColorHelper {
         } catch (Exception e) {
             throw new RuntimeException("Should not happen. MD5 not present?");
         }
+    }
+
+    public Color toColor(boolean isActive) {
+        return isActive ? ACTIVITY_ENTRY_IS_ACTIVE_BACKGROUND_COLOR : ACTIVITY_ENTRY_IS_INACTIVE_BACKGROUND_COLOR;
+    }
+
+    public Color toTextColor(boolean isActive) {
+        return isActive ? ACTIVITY_ENTRY_IS_ACTIVE_TEXT_COLOR : ACTIVITY_ENTRY_IS_INACTIVE_TEXT_COLOR;
     }
 
     public Color toColor(String s) {

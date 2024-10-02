@@ -6,6 +6,7 @@ import helper.TimelineHelper;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import model.ActivityEntry;
 import model.LoggedEntry;
 import model.TaggedEntry;
 
@@ -26,9 +27,11 @@ public class TimelineCanvas extends MyCanvas {
 
     private final ArrayList<TimelineEntry> loggedEntries = new ArrayList<>();
     private final ArrayList<TimelineEntry> taggedEntries = new ArrayList<>();
+    private final ArrayList<TimelineEntry> activityEntries = new ArrayList<>();
 
     private final ArrayList<TimelineEntry> visibleLoggedEntries = new ArrayList<>();
     private final ArrayList<TimelineEntry> visibleTaggedEntries = new ArrayList<>();
+    private final ArrayList<TimelineEntry> visibleActivityEntries = new ArrayList<>();
 
     private TimelineHelper timelineHelper;
     private int minuteIncrement;
@@ -48,7 +51,8 @@ public class TimelineCanvas extends MyCanvas {
         colorHelper = new ColorHelper();
     }
 
-    public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries, ArrayList<TaggedEntry> taggedEntries) {
+    public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries,
+                           ArrayList<TaggedEntry> taggedEntries, ArrayList<ActivityEntry> activityEntries) {
         this.loggedEntries.clear();
         for (var loggedEntry: loggedEntries) {
             final var entry = new TimelineEntry(loggedEntry,
@@ -61,6 +65,14 @@ public class TimelineCanvas extends MyCanvas {
             final var entry = new TimelineEntry(taggedEntry,
                     colorHelper.toColor(taggedEntry.getCategory().getName()));
             this.taggedEntries.add(entry);
+        }
+
+        this.activityEntries.clear();
+        for (var activityEntry: activityEntries) {
+            final var entry = new TimelineEntry(activityEntry,
+                    colorHelper.toColor(activityEntry.isActive()),
+                    colorHelper.toTextColor(activityEntry.isActive()));
+            this.activityEntries.add(entry);
         }
 
         updateConstants();
@@ -81,14 +93,18 @@ public class TimelineCanvas extends MyCanvas {
         // Clear the canvas
         g.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        // Timeline
-        // - Background
+        // Activity entries
+        for (var entry: visibleActivityEntries) {
+            g.setFill(entry.getColor());
+            g.fillRect(entry.getStartX(), 0, entry.getWidth(), canvasHeight);
+        }
+
+        // Background
         g.setFill(BACKGROUND_COLOR);
         g.fillRect(0, 0, canvasWidth, TIMELINE_HEIGHT);
 
-        // - Timelines
+        // Timelines
         final var endTime = startDateTime.plus(currentDelta).plusMinutes(minuteIncrement);
-
         for(var currentTime = startDateTime.minusMinutes(startDateTime.getMinute()).minusSeconds(startDateTime.getSecond());
             currentTime.isBefore(endTime);
             currentTime = currentTime.plusMinutes(minuteIncrement)) {
@@ -147,21 +163,40 @@ public class TimelineCanvas extends MyCanvas {
                     Duration.between(viewPortEnd.toLocalDate(), viewPortEnd).minusSeconds(1));
         }
 
+        fillVisibleEntries(visibleActivityEntries, activityEntries, viewPortStart, viewPortEnd);
         fillVisibleEntries(visibleLoggedEntries, loggedEntries, viewPortStart, viewPortEnd);
         fillVisibleEntries(visibleTaggedEntries, taggedEntries, viewPortStart, viewPortEnd);
     }
 
-    public TimelineEntry getVisibleTimelineEntry(double x, double y) {
+    public HoveredTimelineEntries getVisibleTimelineEntry(double x, double y) {
+        // Activity entries
+        // Perform a linear search, as we do not anticipate any larger quantities of activity entries.
+        TimelineEntry activityEntry = null;
+        for (var entry: visibleActivityEntries) {
+            // The given X is before the current entries start, which means
+            // that it can never be within any entry in the list.
+            if (x < entry.getStartX()) {
+                break;
+            }
+
+            // The given X is within the bounds of the entry.
+            if (x <= entry.getEndX()) {
+                activityEntry = entry;
+                break;
+            }
+        }
+
+        // Tagged entries
         if (TAGGED_ENTRIES_START_Y <= y && y <= TAGGED_ENTRIES_START_Y + ENTRIES_HEIGHT) {
             // Empty list, no need to iterate
             if (visibleTaggedEntries.isEmpty()) {
-                return null;
+                return new HoveredTimelineEntries(null, activityEntry);
             }
 
             // Check if the given X is to the right of the last entry's end
             final var lastEntry = visibleTaggedEntries.getLast();
             if (lastEntry.getEndX() < x) {
-                return null;
+                return new HoveredTimelineEntries(null, activityEntry);
             }
 
             // Perform a linear search, as we do not anticipate any larger quantities of
@@ -175,17 +210,18 @@ public class TimelineCanvas extends MyCanvas {
 
                 // The given X is within the bounds of the entry.
                 if (x <= entry.getEndX()) {
-                    return entry;
+                    return new HoveredTimelineEntries(entry, activityEntry);
                 }
             }
 
-            return null;
+            return new HoveredTimelineEntries(null, activityEntry);
         }
 
+        // Logged entries
         if (LOGGED_ENTRIES_START_Y <= y && y <= LOGGED_ENTRIES_START_Y + ENTRIES_HEIGHT) {
             // Empty list, no need to iterate
             if (visibleLoggedEntries.isEmpty()) {
-                return null;
+                return new HoveredTimelineEntries(null, activityEntry);
             }
 
             // Perform a binary search, as the list of logged entries is expected to contain many entries.
@@ -197,7 +233,7 @@ public class TimelineCanvas extends MyCanvas {
 
                 if (currentEntry.getStartX() <= x && x <= currentEntry.getEndX()) {
                     // We've found the entry
-                    return currentEntry;
+                    return new HoveredTimelineEntries(currentEntry, activityEntry);
                 } else if (x < currentEntry.getStartX()) {
                     // The given x is before the current entries start. Check the left half of the entries
                     currentEndIndex = middle - 1;
@@ -208,10 +244,10 @@ public class TimelineCanvas extends MyCanvas {
             }
 
             // No entry found
-            return null;
+            return new HoveredTimelineEntries(null, activityEntry);
         }
 
-        return null;
+        return new HoveredTimelineEntries(null, activityEntry);
     }
 
     private void fillVisibleEntries(ArrayList<TimelineEntry> visibleEntries, ArrayList<TimelineEntry> entries,
@@ -285,8 +321,11 @@ public class TimelineCanvas extends MyCanvas {
         return 1;
     }
 
+    public record HoveredTimelineEntries(TimelineEntry entry, TimelineEntry activityEntry) { }
+
     public class TimelineEntry {
         private final Color color;
+        private final Color textColor;
 
         private final LocalDateTime startDateTime;
         private final LocalDateTime endDateTime;
@@ -297,10 +336,20 @@ public class TimelineCanvas extends MyCanvas {
         private double endX = 0;
         private double width = 0;
 
+        public TimelineEntry(ActivityEntry entry, Color color, Color textColor) {
+            startDateTime = entry.getStart();
+            endDateTime = entry.getEnd();
+            this.color = color;
+            this.textColor = textColor;
+
+            infoText.add(entry.isActive() ? "[## Active ##]" : "[## Inactive ##]");
+        }
+
         public TimelineEntry(LoggedEntry entry, Color color) {
             startDateTime = entry.getStart();
             endDateTime = entry.getStop();
             this.color = color;
+            this.textColor = Color.WHITE;
 
             infoText.add(entry.getApplicationWindow().getTitle());
             infoText.add(entry.getApplicationWindow().getApplication().getName());
@@ -310,6 +359,7 @@ public class TimelineCanvas extends MyCanvas {
             startDateTime = entry.getStart();
             endDateTime = entry.getStop();
             this.color = color;
+            this.textColor = Color.WHITE;
             infoText.add(entry.getCategory().getName());
         }
 
@@ -345,6 +395,10 @@ public class TimelineCanvas extends MyCanvas {
 
         public ArrayList<String> getInfoText() {
             return infoText;
+        }
+
+        public Color getTextColor() {
+            return textColor;
         }
     }
 }
