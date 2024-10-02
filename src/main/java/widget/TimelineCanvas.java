@@ -18,8 +18,10 @@ import java.util.ArrayList;
 public class TimelineCanvas extends MyCanvas {
     private static final int TIMELINE_HEIGHT = 30;
     private static final int TAGGED_ENTRIES_START_Y = TIMELINE_HEIGHT + 10;
-    private static final int LOGGED_ENTRIES_START_Y = TAGGED_ENTRIES_START_Y + TIMELINE_HEIGHT * 2;
-    private static final int ENTRIES_HEIGHT = 40;
+    private static final int SPACE_BETWEEN_TIMELINES = TIMELINE_HEIGHT;
+    private static final int TIMELINE_MARGIN = 10;
+    private double loggedEntriesStartY = TAGGED_ENTRIES_START_Y + TIMELINE_HEIGHT * 2;
+    private double entriesHeight;
     private static final int TIMELINE_TEXT_PADDING = 10;
 
     private LocalDateTime startDateTime;
@@ -131,13 +133,13 @@ public class TimelineCanvas extends MyCanvas {
         // Tagged entries
         for (var entry : visibleTaggedEntries) {
             g.setFill(entry.getColor());
-            g.fillRect(entry.getStartX(), TAGGED_ENTRIES_START_Y, entry.getWidth(), ENTRIES_HEIGHT);
+            g.fillRect(entry.getStartX(), TAGGED_ENTRIES_START_Y, entry.getWidth(), entriesHeight);
         }
 
         // Logged entries
         for (var entry : visibleLoggedEntries) {
             g.setFill(entry.getColor());
-            g.fillRect(entry.getStartX(), LOGGED_ENTRIES_START_Y, entry.getWidth(), ENTRIES_HEIGHT);
+            g.fillRect(entry.getStartX(), loggedEntriesStartY, entry.getWidth(), entriesHeight);
         }
 
         // Sides
@@ -156,6 +158,9 @@ public class TimelineCanvas extends MyCanvas {
             viewPortStart = viewPortStart.plus(
                     Duration.between(viewPortStart, startDateTime.toLocalDate()));
         }
+
+        entriesHeight = (canvas.getHeight() - TAGGED_ENTRIES_START_Y - SPACE_BETWEEN_TIMELINES - TIMELINE_MARGIN) / 2;
+        loggedEntriesStartY = TAGGED_ENTRIES_START_Y + entriesHeight + SPACE_BETWEEN_TIMELINES;
 
         var viewPortEnd = startDateTime.plus(currentDelta).plusMinutes(minuteIncrement);
         if (viewPortStart.getDayOfYear() != currentDayOfYear) {
@@ -187,7 +192,7 @@ public class TimelineCanvas extends MyCanvas {
         }
 
         // Tagged entries
-        if (TAGGED_ENTRIES_START_Y <= y && y <= TAGGED_ENTRIES_START_Y + ENTRIES_HEIGHT) {
+        if (TAGGED_ENTRIES_START_Y <= y && y <= TAGGED_ENTRIES_START_Y + entriesHeight) {
             // Empty list, no need to iterate
             if (visibleTaggedEntries.isEmpty()) {
                 return new HoveredTimelineEntries(null, activityEntry);
@@ -218,7 +223,7 @@ public class TimelineCanvas extends MyCanvas {
         }
 
         // Logged entries
-        if (LOGGED_ENTRIES_START_Y <= y && y <= LOGGED_ENTRIES_START_Y + ENTRIES_HEIGHT) {
+        if (loggedEntriesStartY <= y && y <= loggedEntriesStartY + entriesHeight) {
             // Empty list, no need to iterate
             if (visibleLoggedEntries.isEmpty()) {
                 return new HoveredTimelineEntries(null, activityEntry);
