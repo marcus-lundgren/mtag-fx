@@ -1,6 +1,7 @@
 package repository;
 
 import helper.DateTimeHelper;
+import model.ApplicationWindow;
 import model.LoggedEntry;
 
 import java.sql.Connection;
@@ -8,9 +9,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class LoggedEntryRepository {
     private final ApplicationWindowRepository applicationWindowRepository = new ApplicationWindowRepository();
+    private final HashMap<Long, ApplicationWindow> applicationWindowCache = new HashMap<>();
 
     public LoggedEntry getLatestEntry(Connection connection) throws SQLException {
         final var statement = connection.createStatement();
@@ -56,7 +59,14 @@ public class LoggedEntryRepository {
         final var databaseIdValue = resultSet.getLong("le_id");
 
         final var applicationWindowId = resultSet.getLong("le_application_window_id");
-        final var applicationWindow = applicationWindowRepository.get(connection, applicationWindowId);
+
+        ApplicationWindow applicationWindow;
+        if (applicationWindowCache.containsKey(applicationWindowId)) {
+            applicationWindow = applicationWindowCache.get(applicationWindowId);
+        } else {
+            applicationWindow = applicationWindowRepository.get(connection, applicationWindowId);
+            applicationWindowCache.put(applicationWindowId, applicationWindow);
+        }
 
         return new LoggedEntry(startDateTime, stopDateTime, applicationWindow, databaseIdValue);
     }

@@ -1,15 +1,18 @@
 package repository;
 
 import helper.DateTimeHelper;
+import model.Category;
 import model.TaggedEntry;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TaggedEntryRepository {
     private final CategoryRepository categoryRepository = new CategoryRepository();
+    private final HashMap<Long, Category> categoryCache = new HashMap<>();
 
     public ArrayList<TaggedEntry> getAllByDate(Connection connection, LocalDate date) throws SQLException {
         final var fromTimestamp = DateTimeHelper.localDateToTimestamp(date);
@@ -31,7 +34,14 @@ public class TaggedEntryRepository {
             final var databaseId = resultSet.getLong("te_id");
             final var categoryId = resultSet.getLong("te_category_id");
 
-            final var category = categoryRepository.getById(connection, categoryId);
+            Category category;
+            if (categoryCache.containsKey(categoryId)) {
+                category = categoryCache.get(categoryId);
+            } else {
+                category = categoryRepository.getById(connection, categoryId);
+                categoryCache.put(categoryId, category);
+            }
+
             final var entry = new TaggedEntry(
                     DateTimeHelper.timestampToLocalDateTime(startTimestamp),
                     DateTimeHelper.timestampToLocalDateTime(stopTimestamp),
