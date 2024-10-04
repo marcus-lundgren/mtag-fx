@@ -13,6 +13,7 @@ import model.TaggedEntry;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 
 public class TimelineCanvas extends MyCanvas {
@@ -53,8 +54,18 @@ public class TimelineCanvas extends MyCanvas {
         colorHelper = new ColorHelper();
     }
 
+    public void move(boolean moveRight) {
+        final var newBoundaries = timelineHelper.move(startDateTime, startDateTime.plus(currentDelta), moveRight);
+        startDateTime = newBoundaries.start();
+        currentDelta = Duration.between(newBoundaries.start(), newBoundaries.end());
+        updateConstants();
+        repaint();
+    }
+
     public void setEntries(LocalDate date, ArrayList<LoggedEntry> loggedEntries,
                            ArrayList<TaggedEntry> taggedEntries, ArrayList<ActivityEntry> activityEntries) {
+        this.startDateTime = LocalDateTime.of(date, startDateTime.toLocalTime());
+
         this.loggedEntries.clear();
         for (var loggedEntry: loggedEntries) {
             final var entry = new TimelineEntry(loggedEntry,
@@ -155,8 +166,7 @@ public class TimelineCanvas extends MyCanvas {
         final var currentDayOfYear = startDateTime.getDayOfYear();
         var viewPortStart = startDateTime.minusMinutes(minuteIncrement);
         if (viewPortStart.getDayOfYear() != currentDayOfYear) {
-            viewPortStart = viewPortStart.plus(
-                    Duration.between(viewPortStart, startDateTime.toLocalDate()));
+            viewPortStart = LocalDateTime.of(startDateTime.toLocalDate(), LocalTime.MIN);
         }
 
         entriesHeight = (canvas.getHeight() - TAGGED_ENTRIES_START_Y - SPACE_BETWEEN_TIMELINES - TIMELINE_MARGIN) / 2;

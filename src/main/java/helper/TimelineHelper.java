@@ -2,8 +2,11 @@ package helper;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class TimelineHelper {
+    private static final float MOVE_STEP_IN_PERCENT = 0.05f;
+
     private final double canvasWidth;
     private final double timelineSidePadding;
     private final LocalDateTime startDatetime;
@@ -24,6 +27,28 @@ public class TimelineHelper {
         canvasWidthWithoutPadding = canvasWidth - (timelineSidePadding * 2);
     }
 
+    public TimelineBoundaries  move(LocalDateTime start, LocalDateTime end, boolean moveRight) {
+        final var currentDelta = Duration.between(start, end);
+        final var moveDelta = Duration.ofSeconds((long) (currentDelta.getSeconds() * MOVE_STEP_IN_PERCENT));
+        final var currentDate = LocalDateTime.of(start.toLocalDate(), LocalTime.MIN);
+        var newStart = start;
+
+        if (moveRight) {
+            newStart = newStart.plus(moveDelta);
+            final var nextDay = currentDate.plusDays(1);
+            if (!newStart.plus(currentDelta).isBefore(nextDay)) {
+                newStart = nextDay.minusSeconds(1).minus(currentDelta);
+            }
+        } else {
+            newStart = newStart.minus(moveDelta);
+            if (newStart.isBefore(currentDate)) {
+                newStart = currentDate;
+            }
+        }
+
+        return new TimelineBoundaries(newStart, newStart.plus(currentDelta));
+    }
+
     public double dateTimeToPixel(LocalDateTime dateTime) {
         final var deltaFromStart = Duration.between(startDatetime, dateTime);
         final var boundaryRelativeDelta = (double) deltaFromStart.getSeconds() / boundaryDeltaInSeconds;
@@ -42,4 +67,6 @@ public class TimelineHelper {
         final var secondsToAdd = relativePixelDelta * boundaryDeltaInSeconds;
         return startDatetime.plusSeconds((long) secondsToAdd);
     }
+
+    public record TimelineBoundaries(LocalDateTime start, LocalDateTime end) { }
 }

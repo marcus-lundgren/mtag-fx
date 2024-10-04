@@ -25,6 +25,15 @@ public class OverlayCanvas extends MyCanvas {
             updateState(e.getX(), e.getY());
             repaint();
         });
+        setOnScroll(e -> {
+            // Horizontal movement
+            if (e.getDeltaX() != 0d) {
+                final var rightScroll = e.getDeltaX() < 0;
+                timelineCanvas.move(rightScroll);
+                updateState(currentX, currentY);
+                repaint();
+            }
+        });
     }
 
     private void updateState(double x, double y) {
