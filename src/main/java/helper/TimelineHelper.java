@@ -6,6 +6,10 @@ import java.time.LocalTime;
 
 public class TimelineHelper {
     private static final float MOVE_STEP_IN_PERCENT = 0.05f;
+    private static final float ZOOM_FACTOR = 0.03f;
+
+    private static final long MIN_BOUNDS_IN_SECONDS = Duration.ofMinutes(5).getSeconds();
+    private static final long MAX_BOUNDS_IN_SECONDS = Duration.ofDays(1).minusSeconds(1).getSeconds();
 
     private final double canvasWidth;
     private final double timelineSidePadding;
@@ -27,7 +31,57 @@ public class TimelineHelper {
         canvasWidthWithoutPadding = canvasWidth - (timelineSidePadding * 2);
     }
 
-    public TimelineBoundaries  move(LocalDateTime start, LocalDateTime end, boolean moveRight) {
+    public TimelineBoundaries zoom(LocalDateTime mouseDatetime, LocalDateTime start, LocalDateTime end, boolean zoomIn) {
+        final var boundaryDelta = Duration.between(start, end);
+        final var boundaryDeltaInSeconds = boundaryDelta.getSeconds();
+        final var zoomStepInSeconds = (long) (boundaryDeltaInSeconds * ZOOM_FACTOR);
+        final var mouseDeltaFromStartInSeconds = Duration.between(start, mouseDatetime).getSeconds();
+        final var mouseRelativePosition = (float) mouseDeltaFromStartInSeconds / boundaryDeltaInSeconds;
+
+        var newStart = start;
+        var newBoundary = boundaryDelta;
+
+        if (zoomIn) {
+            if (boundaryDeltaInSeconds > MIN_BOUNDS_IN_SECONDS){
+                // Zoom in a step
+                newBoundary = boundaryDelta.minusSeconds(zoomStepInSeconds);
+
+                // Ensure that the zoom is fixed on the mouse position by adjusting the new start
+                final var newMouseDeltaInSeconds = (long) (mouseRelativePosition * newBoundary.getSeconds());
+                newStart = start.plusSeconds(mouseDeltaFromStartInSeconds - newMouseDeltaInSeconds);
+            }
+        } else {
+            if (boundaryDeltaInSeconds < MAX_BOUNDS_IN_SECONDS) {
+                // Zoom out a step
+                newBoundary = boundaryDelta.plusSeconds(zoomStepInSeconds);
+
+                final var minimumNewStart = LocalDateTime.of(start.toLocalDate(), LocalTime.MIN);
+
+                if (newBoundary.getSeconds() >= MAX_BOUNDS_IN_SECONDS) {
+                    newBoundary = Duration.ofSeconds(MAX_BOUNDS_IN_SECONDS);
+                    newStart = minimumNewStart;
+                } else {
+                    // Ensure that the zoom is fixed on the mouse position by adjusting the new start
+                    final var newMouseDeltaInSeconds = (long) (mouseRelativePosition * newBoundary.getSeconds());
+                    newStart = start.plusSeconds(mouseDeltaFromStartInSeconds - newMouseDeltaInSeconds);
+                }
+
+                // Ensure that we don't get too far to the left
+                if (newStart.isBefore(minimumNewStart)) {
+                    newStart = minimumNewStart;
+                }
+
+                // Ensure that we don't get too far to the right
+                if (newStart.plus(newBoundary).getDayOfYear() != start.getDayOfYear()) {
+                    newStart = minimumNewStart.plusSeconds(MAX_BOUNDS_IN_SECONDS).minus(newBoundary);
+                }
+            }
+        }
+
+        return new TimelineBoundaries(newStart, newStart.plus(newBoundary));
+    }
+
+    public TimelineBoundaries move(LocalDateTime start, LocalDateTime end, boolean moveRight) {
         final var currentDelta = Duration.between(start, end);
         final var moveDelta = Duration.ofSeconds((long) (currentDelta.getSeconds() * MOVE_STEP_IN_PERCENT));
         final var currentDate = LocalDateTime.of(start.toLocalDate(), LocalTime.MIN);

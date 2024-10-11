@@ -25,8 +25,8 @@ public class TimelineCanvas extends MyCanvas {
     private double entriesHeight;
     private static final int TIMELINE_TEXT_PADDING = 10;
 
-    private LocalDateTime startDateTime;
-    private Duration currentDelta;
+    private LocalDateTime startDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+    private Duration currentDelta = Duration.ofDays(1).minusSeconds(1);
 
     private final ArrayList<TimelineEntry> loggedEntries = new ArrayList<>();
     private final ArrayList<TimelineEntry> taggedEntries = new ArrayList<>();
@@ -48,10 +48,15 @@ public class TimelineCanvas extends MyCanvas {
 
     public TimelineCanvas(double width, double height, Pane parent) {
         super(width, height, parent);
-        startDateTime = LocalDate.now().atStartOfDay();
-        currentDelta = Duration.ofSeconds(23 * 3600 + 59 * 60 + 59);
-        timelineHelper = createTimelineHelper();
         colorHelper = new ColorHelper();
+    }
+
+    public void zoom(boolean zoomIn, LocalDateTime relativeTo) {
+        final var newBoundaries = timelineHelper.zoom(relativeTo, startDateTime, startDateTime.plus(currentDelta), zoomIn);
+        startDateTime = newBoundaries.start();
+        currentDelta = Duration.between(newBoundaries.start(), newBoundaries.end());
+        updateConstants();
+        repaint();
     }
 
     public void move(boolean moveRight) {

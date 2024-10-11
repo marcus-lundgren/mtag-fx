@@ -26,7 +26,15 @@ public class OverlayCanvas extends MyCanvas {
             repaint();
         });
         setOnScroll(e -> {
-            // Horizontal movement
+            // Vertical scrolling
+            if (e.getDeltaY() != 0d) {
+                final var upScroll = e.getDeltaY() > 0;
+                timelineCanvas.zoom(upScroll, timelineCanvas.getTimelineHelper().pixelToDatetime(currentX));
+                updateState(currentX, currentY);
+                repaint();
+            }
+
+            // Horizontal scrolling
             if (e.getDeltaX() != 0d) {
                 final var rightScroll = e.getDeltaX() < 0;
                 timelineCanvas.move(rightScroll);
