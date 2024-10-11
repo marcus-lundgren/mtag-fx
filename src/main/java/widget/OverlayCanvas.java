@@ -15,7 +15,7 @@ public class OverlayCanvas extends MyCanvas {
     private double currentX = 0f;
     private double currentY = 0f;
     private final TooltipAttributes tooltipAttributes = new TooltipAttributes();
-
+    private boolean mouseOnCanvas = true;
 
     public OverlayCanvas(double width, double height, Pane parent, TimelineCanvas timelineCanvas) {
         super(width, height, parent);
@@ -41,6 +41,13 @@ public class OverlayCanvas extends MyCanvas {
                 updateState(currentX, currentY);
                 repaint();
             }
+        });
+        setOnMouseEntered(e -> {
+            mouseOnCanvas = true;
+        });
+        setOnMouseExited(e -> {
+            mouseOnCanvas = false;
+            repaint();
         });
     }
 
@@ -69,6 +76,11 @@ public class OverlayCanvas extends MyCanvas {
         // Clear the canvas
         final var g = canvas.getGraphicsContext2D();
         g.clearRect(0, 0, canvasWidth, canvasHeight);
+
+        // If the mouse isn't on the canvas, then don't continue the painting
+        if (!mouseOnCanvas) {
+            return;
+        }
 
         // "Tooltip" draw
         final var tooltipWidth = tooltipAttributes.getTooltipWidth();
