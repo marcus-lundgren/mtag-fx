@@ -350,6 +350,7 @@ public class TimelineCanvas extends MyCanvas {
         private final LocalDateTime startDateTime;
         private final LocalDateTime endDateTime;
 
+        private final String durationText;
         private final ArrayList<String> infoText = new ArrayList<>();
 
         private double startX = 0;
@@ -362,6 +363,7 @@ public class TimelineCanvas extends MyCanvas {
             this.color = color;
             this.textColor = textColor;
 
+            durationText = null;
             infoText.add(entry.isActive() ? "[## Active ##]" : "[## Inactive ##]");
         }
 
@@ -371,6 +373,7 @@ public class TimelineCanvas extends MyCanvas {
             this.color = color;
             this.textColor = Color.WHITE;
 
+            durationText = DateTimeHelper.toDurationText(startDateTime, endDateTime);
             infoText.add(entry.getApplicationWindow().getTitle());
             infoText.add(entry.getApplicationWindow().getApplication().getName());
         }
@@ -379,6 +382,8 @@ public class TimelineCanvas extends MyCanvas {
             startDateTime = entry.getStart();
             endDateTime = entry.getStop();
             this.color = color;
+
+            durationText = DateTimeHelper.toDurationText(startDateTime, endDateTime);
             this.textColor = Color.WHITE;
             infoText.add(entry.getCategory().getName());
         }
@@ -419,6 +424,10 @@ public class TimelineCanvas extends MyCanvas {
 
         public Color getTextColor() {
             return textColor;
+        }
+
+        public String getDurationText() {
+            return durationText;
         }
     }
 }

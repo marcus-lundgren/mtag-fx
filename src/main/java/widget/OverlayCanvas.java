@@ -133,6 +133,12 @@ public class OverlayCanvas extends MyCanvas {
                 return;
             }
 
+            // Add the duration text if it exists
+            if (entry.getDurationText() != null) {
+                addText(entry.getDurationText(), Color.YELLOW);
+            }
+
+            // Add the info texts
             for (var t: entry.getInfoText()) {
                 addText(t, entry.getTextColor());
             }

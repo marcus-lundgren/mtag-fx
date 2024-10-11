@@ -34,4 +34,9 @@ public class DateTimeHelper {
     public static long localDateToTimestamp(LocalDate date) {
         return date.toEpochSecond(ZERO_TIME, ZoneId.systemDefault().getRules().getOffset(date.atStartOfDay()));
     }
+
+    public static String toDurationText(LocalDateTime start, LocalDateTime end) {
+        return String.format("%s - %s (%s)", start.format(TIME_STRING_FORMATTER),
+                end.format(TIME_STRING_FORMATTER), toTimeString(Duration.between(start, end)));
+    }
 }
