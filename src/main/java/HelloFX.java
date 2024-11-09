@@ -47,13 +47,8 @@ public class HelloFX extends Application {
         overlayCanvas = new OverlayCanvas(500, 500, pane, timelineCanvas);
         overlayCanvas.toFront();
 
-        pane.widthProperty().addListener((observable -> {
-            repaintCanvases();
-        }));
-
-        pane.heightProperty().addListener((observable -> {
-            repaintCanvases();
-        }));
+        pane.widthProperty().addListener(observable -> repaintCanvases());
+        pane.heightProperty().addListener(observable -> repaintCanvases());
 
         pane.getChildren().addAll(timelineCanvas, overlayCanvas);
 
